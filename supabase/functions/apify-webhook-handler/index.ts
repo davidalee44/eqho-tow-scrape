@@ -23,15 +23,15 @@ serve(async (req) => {
     const webhook = await req.json();
     console.log("Received webhook:", JSON.stringify(webhook, null, 2));
 
-    // Extract run data
+    // Extract run data - handle different webhook payload formats
     const runData = webhook.data || webhook;
-    const runId = runData.id;
+    const runId = runData.id || runData.runId;
     const status = runData.status;
 
     if (!runId) {
-      console.error("Missing run_id in webhook payload");
+      console.error("Missing run_id in webhook payload:", JSON.stringify(webhook, null, 2));
       return new Response(
-        JSON.stringify({ error: "Missing run_id" }),
+        JSON.stringify({ error: "Missing run_id in webhook payload" }),
         {
           status: 400,
           headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -42,6 +42,17 @@ serve(async (req) => {
     // Only process SUCCEEDED runs
     if (status !== "SUCCEEDED") {
       console.log(`Skipping run ${runId} with status: ${status}`);
+      
+      // Update run status in database if it exists
+      await supabase
+        .from("apify_runs")
+        .update({
+          status: status,
+          updated_at: now,
+        })
+        .eq("run_id", runId)
+        .then(() => {}); // Fire and forget
+      
       return new Response(
         JSON.stringify({ message: `Run ${runId} not succeeded, status: ${status}` }),
         {

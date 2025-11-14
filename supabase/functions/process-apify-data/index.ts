@@ -54,8 +54,9 @@ serve(async (req) => {
 
     // Fetch data from Apify
     console.log(`Fetching data from Apify dataset ${dataset_id}...`);
+    // Use pagination for large datasets (limit 10k per request, can paginate if needed)
     const apifyResponse = await fetch(
-      `https://api.apify.com/v2/datasets/${dataset_id}/items?token=${apifyToken}&limit=10000`
+      `https://api.apify.com/v2/datasets/${dataset_id}/items?token=${apifyToken}&limit=10000&format=json`
     );
 
     if (!apifyResponse.ok) {
@@ -65,7 +66,39 @@ serve(async (req) => {
     }
 
     const items = await apifyResponse.json();
-    console.log(`Fetched ${items.length} items from Apify`);
+    
+    // Handle different response formats
+    const itemList = Array.isArray(items) ? items : (items.items || items.data || []);
+    console.log(`Fetched ${itemList.length} items from Apify`);
+    
+    if (itemList.length === 0) {
+      console.warn(`No items found in dataset ${dataset_id}`);
+      await supabase
+        .from("apify_runs")
+        .update({
+          processing_status: "completed",
+          processed_at: new Date().toISOString(),
+          error_message: "No items found in dataset",
+          updated_at: new Date().toISOString(),
+        })
+        .eq("run_id", run_id);
+      
+      return new Response(
+        JSON.stringify({
+          success: true,
+          run_id,
+          imported: 0,
+          updated: 0,
+          errors: 0,
+          total: 0,
+          message: "No items found in dataset",
+        }),
+        {
+          status: 200,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        }
+      );
+    }
 
     // Get run metadata to determine zone_id
     const { data: runData } = await supabase
@@ -100,7 +133,7 @@ serve(async (req) => {
 
     // Map and filter valid companies
     const companies: any[] = [];
-    for (const item of items) {
+    for (const item of itemList) {
       const mapped = mapApifyResult(item);
       if (mapped) {
         // Remove fields that don't exist in Company model
@@ -115,7 +148,7 @@ serve(async (req) => {
       }
     }
 
-    console.log(`Mapped ${companies.length} valid companies from ${items.length} items`);
+    console.log(`Mapped ${companies.length} valid companies from ${itemList.length} items`);
 
     // Process in batches
     let imported = 0;
