@@ -103,8 +103,12 @@ serve(async (req) => {
     for (const item of items) {
       const mapped = mapApifyResult(item);
       if (mapped) {
+        // Remove fields that don't exist in Company model
+        // (latitude, longitude, photos, category, description, reviews are stored elsewhere or not yet in schema)
+        const { latitude, longitude, photos, category, description, reviews, ...companyData } = mapped;
+        
         companies.push({
-          ...mapped,
+          ...companyData,
           zone_id: zoneId,
           scraping_stage: "google_maps",
         });
