@@ -180,9 +180,9 @@ apify-import-to-supabase: venv-check ## Import Apify data to Supabase (use ZONE_
 		exit 1; \
 	fi
 	@if [ -d ".venv" ]; then \
-		. .venv/bin/activate && python scripts/import_apify_to_supabase.py --zone-id $(ZONE_ID) --limit-runs $(or $(LIMIT_RUNS),10) --limit-items $(or $(LIMIT_ITEMS),); \
+		. .venv/bin/activate && python scripts/import_apify_to_supabase.py --zone-id $(ZONE_ID) --limit-runs $(or $(LIMIT_RUNS),10) $(if $(LIMIT_ITEMS),--limit-items $(LIMIT_ITEMS)); \
 	else \
-		python scripts/import_apify_to_supabase.py --zone-id $(ZONE_ID) --limit-runs $(or $(LIMIT_RUNS),10) --limit-items $(or $(LIMIT_ITEMS),); \
+		python scripts/import_apify_to_supabase.py --zone-id $(ZONE_ID) --limit-runs $(or $(LIMIT_RUNS),10) $(if $(LIMIT_ITEMS),--limit-items $(LIMIT_ITEMS)); \
 	fi
 
 list-zones: venv-check ## List all zones in the database
