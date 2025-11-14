@@ -207,6 +207,17 @@ query-companies: venv-check ## Query and analyze company data (use ZONE_ID=uuid 
 			--limit $(or $(LIMIT),100); \
 	fi
 
+analyze-data: venv-check ## Analyze imported company data (use STATE=XX HAS_IMPOUND=true)
+	@if [ -d ".venv" ]; then \
+		. .venv/bin/activate && python scripts/analyze_imported_data.py \
+			$(if $(STATE),--state $(STATE)) \
+			$(if $(HAS_IMPOUND),--has-impound); \
+	else \
+		python scripts/analyze_imported_data.py \
+			$(if $(STATE),--state $(STATE)) \
+			$(if $(HAS_IMPOUND),--has-impound); \
+	fi
+
 import-contact-enrichment: venv-check ## Import contact enrichment data (use RUN_ID=apify_run_id DRY_RUN=true for preview)
 	@if [ -z "$(RUN_ID)" ]; then \
 		echo "ERROR: RUN_ID not set. Usage: make import-contact-enrichment RUN_ID=your_run_id"; \
