@@ -1,12 +1,13 @@
 """Dashboard service for statistics"""
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select, func, and_
-from typing import Dict, Any
-from datetime import datetime
+from sqlalchemy import select, func, and_, or_
+from typing import Dict, Any, List
+from datetime import datetime, timedelta
 from app.models.company import Company
 from app.models.zone import Zone
 from app.models.enrichment import EnrichmentSnapshot
 from app.models.outreach import OutreachHistory, OutreachAssignment
+from app.models.apify_run import ApifyRun
 from app.utils.time_periods import get_time_period_range
 
 
@@ -219,5 +220,162 @@ class DashboardService:
             'outreach_by_channel': outreach_by_channel,
             'outreach_by_status': outreach_by_status,
             'active_assignments': active_assignments,
+        }
+    
+    @staticmethod
+    async def get_apify_runs_stats(
+        db: AsyncSession,
+        limit: int = 20
+    ) -> Dict[str, Any]:
+        """Get Apify runs statistics"""
+        # Recent runs
+        recent_runs_result = await db.execute(
+            select(ApifyRun)
+            .order_by(ApifyRun.created_at.desc())
+            .limit(limit)
+        )
+        recent_runs = recent_runs_result.scalars().all()
+        
+        # Count by status
+        status_counts_result = await db.execute(
+            select(
+                ApifyRun.status,
+                func.count(ApifyRun.id)
+            ).group_by(ApifyRun.status)
+        )
+        status_counts = {row[0] or 'UNKNOWN': row[1] for row in status_counts_result.all()}
+        
+        # Count by processing status
+        processing_counts_result = await db.execute(
+            select(
+                ApifyRun.processing_status,
+                func.count(ApifyRun.id)
+            ).group_by(ApifyRun.processing_status)
+        )
+        processing_counts = {row[0] or 'UNKNOWN': row[1] for row in processing_counts_result.all()}
+        
+        # Active runs (RUNNING status)
+        active_runs_result = await db.execute(
+            select(func.count(ApifyRun.id)).where(
+                ApifyRun.status == 'RUNNING'
+            )
+        )
+        active_runs = active_runs_result.scalar_one() or 0
+        
+        # Pending processing
+        pending_result = await db.execute(
+            select(func.count(ApifyRun.id)).where(
+                and_(
+                    ApifyRun.status == 'SUCCEEDED',
+                    ApifyRun.processing_status == 'pending'
+                )
+            )
+        )
+        pending_processing = pending_result.scalar_one() or 0
+        
+        # Failed runs
+        failed_result = await db.execute(
+            select(func.count(ApifyRun.id)).where(
+                or_(
+                    ApifyRun.status == 'FAILED',
+                    ApifyRun.processing_status == 'failed'
+                )
+            )
+        )
+        failed_runs = failed_result.scalar_one() or 0
+        
+        # Total items processed
+        items_result = await db.execute(
+            select(func.sum(ApifyRun.items_count)).where(
+                ApifyRun.items_count.isnot(None)
+            )
+        )
+        total_items = items_result.scalar_one() or 0
+        
+        # Format recent runs
+        runs_data = []
+        for run in recent_runs:
+            runs_data.append({
+                'run_id': run.run_id[:20] + '...' if len(run.run_id) > 20 else run.run_id,
+                'location': run.location or 'N/A',
+                'query': run.query or 'N/A',
+                'status': run.status or 'UNKNOWN',
+                'processing_status': run.processing_status or 'pending',
+                'items_count': run.items_count or 0,
+                'started_at': run.started_at.isoformat() if run.started_at else None,
+                'completed_at': run.completed_at.isoformat() if run.completed_at else None,
+                'error_message': run.error_message[:50] + '...' if run.error_message and len(run.error_message) > 50 else run.error_message,
+            })
+        
+        return {
+            'recent_runs': runs_data,
+            'status_counts': status_counts,
+            'processing_counts': processing_counts,
+            'active_runs': active_runs,
+            'pending_processing': pending_processing,
+            'failed_runs': failed_runs,
+            'total_items': total_items,
+        }
+    
+    @staticmethod
+    async def get_import_progress_stats(
+        db: AsyncSession
+    ) -> Dict[str, Any]:
+        """Get company import progress statistics"""
+        # Total companies
+        total_result = await db.execute(select(func.count(Company.id)))
+        total_companies = total_result.scalar_one() or 0
+        
+        # Companies by scraping stage
+        stage_result = await db.execute(
+            select(
+                Company.scraping_stage,
+                func.count(Company.id)
+            ).group_by(Company.scraping_stage)
+        )
+        by_stage = {row[0] or 'None': row[1] for row in stage_result.all()}
+        
+        # Companies by state
+        state_result = await db.execute(
+            select(
+                Company.address_state,
+                func.count(Company.id)
+            ).where(Company.address_state.isnot(None))
+            .group_by(Company.address_state)
+        )
+        by_state = {row[0]: row[1] for row in state_result.all()}
+        
+        # Companies with impound service
+        impound_result = await db.execute(
+            select(func.count(Company.id)).where(
+                Company.has_impound_service == True
+            )
+        )
+        with_impound = impound_result.scalar_one() or 0
+        
+        # Companies with websites scraped
+        scraped_result = await db.execute(
+            select(func.count(Company.id)).where(
+                Company.website_scrape_status == 'success'
+            )
+        )
+        websites_scraped = scraped_result.scalar_one() or 0
+        
+        # Recent imports (last 24 hours)
+        last_24h = datetime.utcnow() - timedelta(hours=24)
+        recent_result = await db.execute(
+            select(func.count(Company.id)).where(
+                Company.created_at >= last_24h
+            )
+        )
+        recent_imports = recent_result.scalar_one() or 0
+        
+        return {
+            'total_companies': total_companies,
+            'by_stage': by_stage,
+            'by_state': by_state,
+            'with_impound': with_impound,
+            'websites_scraped': websites_scraped,
+            'recent_imports_24h': recent_imports,
         }
 
