@@ -15,83 +15,42 @@ class CrawlService:
     def __init__(self):
         self.apify_service = ApifyService()
         self.enrichment_service = EnrichmentService()
+        # Use new orchestrator for comprehensive scraping
+        from app.services.scraping_orchestrator import ScrapingOrchestrator
+        self.orchestrator = ScrapingOrchestrator()
     
     async def crawl_zone(
         self,
         db: AsyncSession,
         zone_id: UUID,
-        search_query: str = "towing company"
+        search_query: str = "towing company",
+        scrape_websites: bool = True,
+        scrape_profiles: bool = False,
+        max_results: int = 100
     ) -> Dict[str, Any]:
         """
-        Crawl a zone for companies
+        Crawl a zone for companies using the comprehensive orchestrator
         
         Returns:
             {
                 'companies_found': int,
                 'companies_new': int,
                 'companies_updated': int,
-                'websites_scraped': int
+                'websites_scraped': int,
+                'websites_failed': int,
+                'profiles_scraped': int,
+                'stage_breakdown': dict
             }
         """
-        # Get zone
-        zone = await ZoneService.get_zone(db, zone_id)
-        if not zone:
-            raise ValueError(f"Zone {zone_id} not found")
-        
-        # Build location string
-        location = f"{zone.name}, {zone.state}" if zone.state else zone.name
-        
-        # Crawl with Apify
-        companies_data = await self.apify_service.crawl_google_maps(
-            location=location,
-            search_query=search_query
+        # Use orchestrator for comprehensive scraping
+        return await self.orchestrator.crawl_and_enrich_zone(
+            db,
+            zone_id,
+            search_query=search_query,
+            scrape_websites=scrape_websites,
+            scrape_profiles=scrape_profiles,
+            max_results=max_results
         )
-        
-        # Process companies
-        companies_new = 0
-        companies_updated = 0
-        
-        for company_data in companies_data:
-            # Check if company exists by google_business_url
-            from sqlalchemy import select
-            google_url = company_data.get('google_business_url', '')
-            if google_url:
-                result = await db.execute(
-                    select(Company).where(Company.google_business_url == google_url)
-                )
-                existing = result.scalar_one_or_none()
-            else:
-                existing = None
-            
-            company = await CompanyService.create_or_update_company(
-                db,
-                company_data,
-                zone_id
-            )
-            
-            if existing:
-                companies_updated += 1
-            else:
-                companies_new += 1
-            
-            # Enrich company (including website scraping)
-            try:
-                await self.enrichment_service.enrich_company(db, company.id)
-            except Exception as e:
-                print(f"Error enriching company {company.id}: {e}")
-        
-        # Count websites scraped
-        websites_scraped = sum(
-            1 for c in companies_data
-            if c.get('website') and c.get('website_scrape_status') == 'success'
-        )
-        
-        return {
-            'companies_found': len(companies_data),
-            'companies_new': companies_new,
-            'companies_updated': companies_updated,
-            'websites_scraped': websites_scraped
-        }
     
     async def scrape_websites_for_zone(
         self,
@@ -101,22 +60,23 @@ class CrawlService:
         """Batch scrape websites for all companies in a zone"""
         companies = await ZoneService.get_companies_by_zone(db, zone_id)
         
-        scraped = 0
-        failed = 0
+        # Filter companies with websites
+        companies_with_websites = [c for c in companies if c.website]
         
-        for company in companies:
-            if company.website:
-                try:
-                    await self.enrichment_service.enrich_company(db, company.id)
-                    scraped += 1
-                except Exception as e:
-                    print(f"Error scraping website for company {company.id}: {e}")
-                    failed += 1
+        if not companies_with_websites:
+            return {
+                'companies_processed': len(companies),
+                'websites_scraped': 0,
+                'websites_failed': 0
+            }
+        
+        # Use orchestrator's batch scraping
+        results = await self.orchestrator._scrape_websites_batch(db, companies_with_websites)
         
         return {
             'companies_processed': len(companies),
-            'websites_scraped': scraped,
-            'websites_failed': failed
+            'websites_scraped': results['success'],
+            'websites_failed': results['failed']
         }
     
     async def scrape_company_website(
@@ -152,4 +112,5 @@ class CrawlService:
         """Close resources"""
         await self.apify_service.close()
         await self.enrichment_service.close()
+        await self.orchestrator.close()
 

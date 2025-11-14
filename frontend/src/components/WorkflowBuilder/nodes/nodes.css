@@ -1,0 +1,239 @@
+/* Base node styles */
+.start-node,
+.end-node,
+.email-node,
+.sms-node,
+.phone-node,
+.delay-node,
+.condition-node {
+  padding: 10px;
+  border-radius: 8px;
+  border: 2px solid #ddd;
+  background: white;
+  min-width: 150px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  transition: all 0.2s;
+}
+
+.start-node.selected,
+.end-node.selected,
+.email-node.selected,
+.sms-node.selected,
+.phone-node.selected,
+.delay-node.selected,
+.condition-node.selected {
+  border-color: #4caf50;
+  box-shadow: 0 4px 8px rgba(76, 175, 80, 0.3);
+}
+
+/* Start Node */
+.start-node {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border-color: #667eea;
+  color: white;
+}
+
+.start-node-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.start-node-icon {
+  font-size: 2rem;
+}
+
+.start-node-label {
+  font-weight: 600;
+  font-size: 1rem;
+}
+
+/* End Node */
+.end-node {
+  background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+  border-color: #f5576c;
+  color: white;
+}
+
+.end-node-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.end-node-icon {
+  font-size: 2rem;
+}
+
+.end-node-label {
+  font-weight: 600;
+  font-size: 1rem;
+}
+
+/* Email Node */
+.email-node {
+  background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+  border-color: #4facfe;
+  color: white;
+}
+
+.email-node-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.email-node-icon {
+  font-size: 1.5rem;
+}
+
+.email-node-label {
+  font-weight: 600;
+  font-size: 0.9rem;
+}
+
+.email-node-subject {
+  font-size: 0.75rem;
+  opacity: 0.9;
+  text-align: center;
+  max-width: 200px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* SMS Node */
+.sms-node {
+  background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
+  border-color: #43e97b;
+  color: white;
+}
+
+.sms-node-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.sms-node-icon {
+  font-size: 1.5rem;
+}
+
+.sms-node-label {
+  font-weight: 600;
+  font-size: 0.9rem;
+}
+
+.sms-node-preview {
+  font-size: 0.7rem;
+  opacity: 0.9;
+  text-align: center;
+  max-width: 200px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Phone Node */
+.phone-node {
+  background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
+  border-color: #fa709a;
+  color: white;
+}
+
+.phone-node-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.phone-node-icon {
+  font-size: 1.5rem;
+}
+
+.phone-node-label {
+  font-weight: 600;
+  font-size: 0.9rem;
+}
+
+.phone-node-preview {
+  font-size: 0.7rem;
+  opacity: 0.9;
+  text-align: center;
+  max-width: 200px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Delay Node */
+.delay-node {
+  background: linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%);
+  border-color: #fcb69f;
+  color: #333;
+}
+
+.delay-node-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.delay-node-icon {
+  font-size: 1.5rem;
+}
+
+.delay-node-label {
+  font-weight: 600;
+  font-size: 0.9rem;
+}
+
+.delay-node-time {
+  font-size: 0.8rem;
+  font-weight: 500;
+  background: rgba(255, 255, 255, 0.5);
+  padding: 0.25rem 0.5rem;
+  border-radius: 4px;
+}
+
+/* Condition Node */
+.condition-node {
+  background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%);
+  border-color: #a8edea;
+  color: #333;
+}
+
+.condition-node-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.condition-node-icon {
+  font-size: 1.5rem;
+}
+
+.condition-node-label {
+  font-weight: 600;
+  font-size: 0.9rem;
+}
+
+.condition-node-text {
+  font-size: 0.7rem;
+  text-align: center;
+  max-width: 200px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  background: rgba(255, 255, 255, 0.5);
+  padding: 0.25rem 0.5rem;
+  border-radius: 4px;
+}
+

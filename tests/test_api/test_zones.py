@@ -1,8 +1,10 @@
 """Tests for zone API endpoints"""
 import pytest
 from fastapi.testclient import TestClient
+from unittest.mock import AsyncMock
 from app.main import app
 from app.database import get_db
+from app.auth.dependencies import get_current_user
 from uuid import uuid4
 
 
@@ -16,6 +18,7 @@ def client():
 async def test_create_zone_endpoint(client, db_session, override_get_db):
     """Test POST /api/v1/zones"""
     app.dependency_overrides[get_db] = override_get_db
+    app.dependency_overrides[get_current_user] = lambda: {"user": {"id": "test-user", "email": "test@example.com"}}
     
     zone_data = {
         "name": "Test Zone",
@@ -39,6 +42,7 @@ async def test_create_zone_endpoint(client, db_session, override_get_db):
 async def test_list_zones_endpoint(client, db_session, test_zone, override_get_db):
     """Test GET /api/v1/zones"""
     app.dependency_overrides[get_db] = override_get_db
+    app.dependency_overrides[get_current_user] = lambda: {"user": {"id": "test-user", "email": "test@example.com"}}
     
     response = client.get("/api/v1/zones?active_only=true")
     
@@ -54,6 +58,7 @@ async def test_list_zones_endpoint(client, db_session, test_zone, override_get_d
 async def test_get_zone_endpoint(client, db_session, test_zone, override_get_db):
     """Test GET /api/v1/zones/{zone_id}"""
     app.dependency_overrides[get_db] = override_get_db
+    app.dependency_overrides[get_current_user] = lambda: {"user": {"id": "test-user", "email": "test@example.com"}}
     
     response = client.get(f"/api/v1/zones/{test_zone.id}")
     
@@ -69,6 +74,7 @@ async def test_get_zone_endpoint(client, db_session, test_zone, override_get_db)
 async def test_get_zone_not_found(client, db_session, override_get_db):
     """Test GET /api/v1/zones/{zone_id} with non-existent zone"""
     app.dependency_overrides[get_db] = override_get_db
+    app.dependency_overrides[get_current_user] = lambda: {"user": {"id": "test-user", "email": "test@example.com"}}
     
     response = client.get(f"/api/v1/zones/{uuid4()}")
     
@@ -81,6 +87,7 @@ async def test_get_zone_not_found(client, db_session, override_get_db):
 async def test_update_zone_endpoint(client, db_session, test_zone, override_get_db):
     """Test PUT /api/v1/zones/{zone_id}"""
     app.dependency_overrides[get_db] = override_get_db
+    app.dependency_overrides[get_current_user] = lambda: {"user": {"id": "test-user", "email": "test@example.com"}}
     
     update_data = {"name": "Updated Zone Name"}
     response = client.put(f"/api/v1/zones/{test_zone.id}", json=update_data)
@@ -96,6 +103,7 @@ async def test_update_zone_endpoint(client, db_session, test_zone, override_get_
 async def test_delete_zone_endpoint(client, db_session, test_zone, override_get_db):
     """Test DELETE /api/v1/zones/{zone_id}"""
     app.dependency_overrides[get_db] = override_get_db
+    app.dependency_overrides[get_current_user] = lambda: {"user": {"id": "test-user", "email": "test@example.com"}}
     
     response = client.delete(f"/api/v1/zones/{test_zone.id}")
     

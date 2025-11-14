@@ -32,30 +32,34 @@ async def test_crawl_google_maps_success(apify_service):
         }
     ]
     
+    from unittest.mock import MagicMock
+    
     with patch.object(apify_service.client, 'post', new_callable=AsyncMock) as mock_post, \
          patch.object(apify_service.client, 'get', new_callable=AsyncMock) as mock_get:
         
-        # Mock run creation
-        mock_post.return_value.status_code = 200
-        mock_post.return_value.json.return_value = mock_response_data
-        mock_post.return_value.raise_for_status = lambda: None
+        # Mock run creation response
+        mock_post_response = MagicMock()
+        mock_post_response.status_code = 200
+        mock_post_response.json = MagicMock(return_value=mock_response_data)
+        mock_post_response.raise_for_status = MagicMock()
+        mock_post.return_value = mock_post_response
         
         # Mock run status check (succeeded)
-        mock_status_response = AsyncMock()
-        mock_status_response.json.return_value = {
-            "data": {"status": "SUCCEEDED"}
-        }
-        mock_status_response.raise_for_status = lambda: None
+        mock_status_response = MagicMock()
+        mock_status_response.status_code = 200
+        mock_status_response.json = MagicMock(return_value={"data": {"status": "SUCCEEDED"}})
+        mock_status_response.raise_for_status = MagicMock()
         
         # Mock results retrieval
-        mock_get.return_value.status_code = 200
-        mock_get.return_value.json.return_value = mock_results
-        mock_get.return_value.raise_for_status = lambda: None
+        mock_results_response = MagicMock()
+        mock_results_response.status_code = 200
+        mock_results_response.json = MagicMock(return_value=mock_results)
+        mock_results_response.raise_for_status = MagicMock()
         
-        # First call is for run creation, subsequent calls are for status checks
+        # First call is for status check, second is for results
         mock_get.side_effect = [
             mock_status_response,  # Status check
-            mock_get.return_value  # Results
+            mock_results_response  # Results
         ]
         
         companies = await apify_service.crawl_google_maps(

@@ -9,13 +9,16 @@ from app.database import Base
 from app.config import settings
 
 # Import all models so Alembic can detect them
-from app.models import Zone, Company, EnrichmentSnapshot, OutreachHistory, OutreachSequence, OutreachAssignment
+from app.models import Zone, Company, EnrichmentSnapshot, OutreachHistory, OutreachSequence, OutreachAssignment, User, EnvironmentConfig
 
 # this is the Alembic Config object
 config = context.config
 
 # Override sqlalchemy.url with our database URL
-config.set_main_option("sqlalchemy.url", settings.database_url.replace("+asyncpg", ""))
+# For Alembic, we need to use psycopg2 (sync) for migrations, but keep asyncpg URL format
+# Convert postgresql+asyncpg:// to postgresql:// for Alembic's sync operations
+db_url = settings.database_url.replace("postgresql+asyncpg://", "postgresql://")
+config.set_main_option("sqlalchemy.url", db_url)
 
 # Interpret the config file for Python logging
 if config.config_file_name is not None:
@@ -49,7 +52,8 @@ def do_run_migrations(connection: Connection) -> None:
 async def run_async_migrations() -> None:
     """Run migrations in 'online' mode with async engine."""
     configuration = config.get_section(config.config_ini_section, {})
-    configuration["sqlalchemy.url"] = settings.database_url.replace("+asyncpg", "")
+    # Use asyncpg URL for async operations
+    configuration["sqlalchemy.url"] = settings.database_url
     
     connectable = async_engine_from_config(
         configuration,

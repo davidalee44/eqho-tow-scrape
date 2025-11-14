@@ -46,6 +46,7 @@ class Company(Base):
     impound_confidence = Column(Float, nullable=True)  # 0.0-1.0
     website_scraped_at = Column(DateTime, nullable=True)
     website_scrape_status = Column(String, nullable=True)  # 'pending', 'success', 'failed', 'no_website'
+    scraping_stage = Column(String, nullable=True)  # 'initial', 'google_maps', 'website_scraped', 'facebook_scraped', 'fully_enriched', 'failed'
     
     # Metadata
     source = Column(String, default="apify_google_maps", nullable=False)

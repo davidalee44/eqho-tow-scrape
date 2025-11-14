@@ -1,0 +1,49 @@
+{
+  "total_runs": 4,
+  "runs": [
+    {
+      "run_id": "mUdp9qreYd2kgGpQx",
+      "status": "SUCCEEDED",
+      "started_at": "2025-10-16T06:21:42.286Z",
+      "finished_at": "2025-10-16T06:36:01.186Z",
+      "actor_id": "nwua9Gu5YrADL7ZDj",
+      "actor_name": "crawler-google-places",
+      "search_query": "Unknown",
+      "max_results": 0,
+      "stats": {}
+    },
+    {
+      "run_id": "vmubJk109s2RkbC2A",
+      "status": "SUCCEEDED",
+      "started_at": "2025-10-16T06:27:30.970Z",
+      "finished_at": "2025-10-16T06:36:42.244Z",
+      "actor_id": "nwua9Gu5YrADL7ZDj",
+      "actor_name": "crawler-google-places",
+      "search_query": "Unknown",
+      "max_results": 0,
+      "stats": {}
+    },
+    {
+      "run_id": "ddM2pSaR3xfwjqZUE",
+      "status": "SUCCEEDED",
+      "started_at": "2025-10-16T06:29:44.610Z",
+      "finished_at": "2025-10-16T06:38:35.993Z",
+      "actor_id": "nwua9Gu5YrADL7ZDj",
+      "actor_name": "crawler-google-places",
+      "search_query": "Unknown",
+      "max_results": 0,
+      "stats": {}
+    },
+    {
+      "run_id": "11QOG3txpXt1B1ktC",
+      "status": "SUCCEEDED",
+      "started_at": "2025-10-16T06:36:11.594Z",
+      "finished_at": "2025-10-16T06:39:54.215Z",
+      "actor_id": "ik8Yexwp1fkjajsUN",
+      "actor_name": "enrich-google-maps-dataset-with-contacts",
+      "search_query": "Unknown",
+      "max_results": 0,
+      "stats": {}
+    }
+  ]
+}

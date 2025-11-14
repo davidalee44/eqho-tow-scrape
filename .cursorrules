@@ -11,6 +11,7 @@ This is a FastAPI backend for scraping and enriching towing company leads from G
 - **Background Jobs**: APScheduler
 - **Terminal UI**: Textual
 - **Testing**: pytest with pytest-asyncio
+- **Package Management**: uv (NOT venv/pip - see AGENT.md)
 
 ## Code Style & Standards
 
@@ -214,14 +215,24 @@ async def test_create_zone_success(db_session):
 ❌ **Don't** ignore type hints
 ❌ **Don't** mix business logic in route handlers (use services)
 
+## Python Environment Management
+
+**CRITICAL: This project uses `uv` for package management, NOT venv/pip.**
+
+- Always use `uv sync` instead of `pip install -r requirements.txt`
+- Use `uv run <command>` to run commands in the environment
+- Virtual environment is at `.venv/` (not `venv/`)
+- See `AGENT.md` for detailed uv instructions
+
 ## When Making Changes
 
-1. **Run tests first**: `make test` or `pytest`
-2. **Check linting**: `make lint` or `ruff check`
-3. **Format code**: `make format` or `black app/`
+1. **Run tests first**: `make test` or `uv run pytest`
+2. **Check linting**: `make lint` or `uv run ruff check`
+3. **Format code**: `make format` or `uv run black app/`
 4. **Update tests**: Add/update tests for new features
 5. **Update documentation**: Update README if needed
 6. **Check migrations**: Create migrations for schema changes
+7. **Add dependencies**: Use `uv add package-name` (not pip install)
 
 ## Documentation
 

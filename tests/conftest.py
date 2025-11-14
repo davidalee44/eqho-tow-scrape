@@ -22,6 +22,19 @@ class GUID(TypeDecorator):
             return dialect.type_descriptor(PostgresUUID())
         else:
             return dialect.type_descriptor(String(36))
+    
+    def process_bind_param(self, value, dialect):
+        """Convert UUID objects to strings for SQLite"""
+        if value is None:
+            return None
+        if isinstance(value, str):
+            return value
+        # Convert UUID object to string
+        return str(value)
+    
+    def process_result_value(self, value, dialect):
+        """Return string UUIDs as-is for SQLite"""
+        return value
 
 
 # Test database URL (SQLite in-memory for testing)
@@ -48,15 +61,23 @@ TestSessionLocal = async_sessionmaker(
 @pytest.fixture(scope="function")
 async def db_session():
     """Create a test database session with transaction rollback"""
-    # Replace UUID columns with String for SQLite compatibility
+    # Replace UUID columns with GUID (String) for SQLite compatibility
     from sqlalchemy import String
     from sqlalchemy.dialects.postgresql import UUID as PostgresUUID
+    import uuid
     
-    # Replace UUID with String in all tables for SQLite
+    # Replace UUID with GUID (which handles UUID->string conversion) in all tables for SQLite
     for table in Base.metadata.tables.values():
         for column in table.columns:
             if isinstance(column.type, PostgresUUID):
-                column.type = String(36)
+                column.type = GUID()
+                # Override the default to return string UUIDs
+                if column.default:
+                    original_default = column.default
+                    if callable(original_default):
+                        def string_uuid_default():
+                            return str(original_default())
+                        column.default = string_uuid_default
     
     # Create all tables
     async with test_engine.begin() as conn:

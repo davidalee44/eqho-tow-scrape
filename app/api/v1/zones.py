@@ -6,6 +6,7 @@ from uuid import UUID
 from app.database import get_db
 from app.schemas.zone import ZoneCreate, ZoneUpdate, ZoneResponse
 from app.services.zone_service import ZoneService
+from app.auth.dependencies import get_current_user
 
 router = APIRouter()
 
@@ -13,6 +14,7 @@ router = APIRouter()
 @router.post("", response_model=ZoneResponse, status_code=201)
 async def create_zone(
     zone_data: ZoneCreate,
+    current_user: dict = Depends(get_current_user),
     db: AsyncSession = Depends(get_db)
 ):
     """Create a new zone"""
@@ -22,6 +24,7 @@ async def create_zone(
 @router.get("", response_model=List[ZoneResponse])
 async def list_zones(
     active_only: bool = True,
+    current_user: dict = Depends(get_current_user),
     db: AsyncSession = Depends(get_db)
 ):
     """List zones"""
@@ -31,6 +34,7 @@ async def list_zones(
 @router.get("/{zone_id}", response_model=ZoneResponse)
 async def get_zone(
     zone_id: UUID,
+    current_user: dict = Depends(get_current_user),
     db: AsyncSession = Depends(get_db)
 ):
     """Get zone details"""
@@ -44,6 +48,7 @@ async def get_zone(
 async def update_zone(
     zone_id: UUID,
     zone_data: ZoneUpdate,
+    current_user: dict = Depends(get_current_user),
     db: AsyncSession = Depends(get_db)
 ):
     """Update zone"""
@@ -56,6 +61,7 @@ async def update_zone(
 @router.delete("/{zone_id}", status_code=204)
 async def delete_zone(
     zone_id: UUID,
+    current_user: dict = Depends(get_current_user),
     db: AsyncSession = Depends(get_db)
 ):
     """Deactivate zone"""

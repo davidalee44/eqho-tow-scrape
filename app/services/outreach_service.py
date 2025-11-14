@@ -1,4 +1,4 @@
-"""Outreach service"""
+"""Outreach service with Eqho.ai integration"""
 from sqlalchemy.ext.asyncio import AsyncSession
 from typing import Dict, Any, List, Optional
 from uuid import UUID
@@ -7,15 +7,21 @@ from jinja2 import Template
 from app.models.outreach import OutreachSequence, OutreachAssignment, OutreachHistory
 from app.models.company import Company
 from app.services.company_service import CompanyService
+from app.services.eqho_service import EqhoService
 from app.config import settings
 import httpx
+import logging
+
+logger = logging.getLogger(__name__)
 
 
 class OutreachService:
-    """Service for managing outreach campaigns"""
+    """Service for managing outreach campaigns with Eqho.ai integration"""
     
     def __init__(self):
         self.webhook_url = settings.outreach_webhook_url
+        self.eqho_service = EqhoService() if settings.eqho_api_token else None
+        self.default_campaign_id = settings.eqho_default_campaign_id
     
     async def create_sequence(
         self,
@@ -60,9 +66,14 @@ class OutreachService:
         company_id: UUID,
         channel: str,
         message_template: str,
-        subject: Optional[str] = None
+        subject: Optional[str] = None,
+        campaign_id: Optional[str] = None
     ) -> OutreachHistory:
-        """Send outreach message"""
+        """
+        Send outreach message
+        
+        For 'phone' channel, uses Eqho.ai if configured, otherwise falls back to webhook
+        """
         company = await CompanyService.get_company(db, company_id)
         if not company:
             raise ValueError(f"Company {company_id} not found")
@@ -80,20 +91,72 @@ class OutreachService:
         db.add(outreach)
         await db.commit()
         
-        # Send via webhook or direct API
+        # Send via appropriate channel
         try:
-            result = await self._send_message(channel, company, message_content, subject)
+            if channel == 'phone' and self.eqho_service:
+                # Use Eqho.ai for voice AI calls
+                result = await self._send_via_eqho(company, campaign_id or self.default_campaign_id)
+            else:
+                # Use webhook or legacy API
+                result = await self._send_message(channel, company, message_content, subject)
+            
             outreach.status = 'sent'
             outreach.sent_at = datetime.utcnow()
-            outreach.external_id = result.get('id')
+            outreach.external_id = result.get('id') or result.get('call_id')
             outreach.outreach_metadata = result
         except Exception as e:
+            logger.error(f"Error sending outreach: {e}", exc_info=True)
             outreach.status = 'failed'
             outreach.outreach_metadata = {'error': str(e)}
         
         await db.commit()
         await db.refresh(outreach)
         return outreach
+    
+    async def _send_via_eqho(
+        self,
+        company: Company,
+        campaign_id: str
+    ) -> Dict[str, Any]:
+        """Send outreach via Eqho.ai voice AI"""
+        if not self.eqho_service:
+            raise ValueError("Eqho service not configured")
+        
+        if not company.phone_primary:
+            raise ValueError(f"Company {company.id} has no phone number")
+        
+        # Prepare lead data for Eqho
+        lead_data = {
+            'first_name': company.name.split()[0] if company.name else 'Business',
+            'last_name': ' '.join(company.name.split()[1:]) if company.name and len(company.name.split()) > 1 else '',
+            'phone': company.phone_primary,
+            'email': company.email,
+            'custom_fields': {
+                'company_name': company.name,
+                'address_city': company.address_city,
+                'address_state': company.address_state,
+                'zone_id': str(company.zone_id) if company.zone_id else None,
+                'source': company.source
+            }
+        }
+        
+        # Upload lead and trigger call
+        upload_result = await self.eqho_service.upload_leads_to_campaign(
+            campaign_id=campaign_id,
+            leads=[lead_data]
+        )
+        
+        # Trigger immediate call
+        call_result = await self.eqho_service.trigger_call_now(
+            campaign_id=campaign_id,
+            lead_id=upload_result.get('list_id')  # In production, would use actual lead_id
+        )
+        
+        return {
+            **call_result,
+            'eqho_list_id': upload_result.get('list_id'),
+            'method': 'eqho_ai'
+        }
     
     def generate_message_content(
         self,

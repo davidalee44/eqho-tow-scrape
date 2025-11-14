@@ -1,0 +1,21 @@
+{
+  "started_at": "2025-11-13T23:53:39.970456",
+  "total_runs": 1,
+  "total_targeted": 3000,
+  "target_locations": [
+    "Baltimore, MD",
+    "Jacksonville, NC",
+    "Florida, USA"
+  ],
+  "runs": [
+    {
+      "run_id": "uJCnW6EBYi9i2Ersh",
+      "location": "Baltimore, MD",
+      "query": "impound lot",
+      "max_results": 3000,
+      "status": "RUNNING",
+      "started_at": "2025-11-13T23:53:29.910255",
+      "console_url": "https://console.apify.com/view/runs/uJCnW6EBYi9i2Ersh"
+    }
+  ]
+}

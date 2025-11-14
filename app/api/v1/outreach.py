@@ -11,6 +11,7 @@ from app.schemas.outreach import (
 )
 from app.services.outreach_service import OutreachService
 from app.models.outreach import OutreachHistory
+from app.auth.dependencies import get_current_user
 from sqlalchemy import select
 
 router = APIRouter()
@@ -19,6 +20,7 @@ router = APIRouter()
 @router.post("/sequences", response_model=OutreachSequenceResponse, status_code=201)
 async def create_sequence(
     sequence_data: OutreachSequenceCreate,
+    current_user: dict = Depends(get_current_user),
     db: AsyncSession = Depends(get_db)
 ):
     """Create an outreach sequence"""
@@ -37,6 +39,7 @@ async def create_sequence(
 @router.get("/sequences", response_model=list[OutreachSequenceResponse])
 async def list_sequences(
     is_active: bool = None,
+    current_user: dict = Depends(get_current_user),
     db: AsyncSession = Depends(get_db)
 ):
     """List outreach sequences"""
@@ -55,6 +58,7 @@ async def list_sequences(
 @router.post("/assign")
 async def assign_company(
     assignment_data: OutreachAssignmentCreate,
+    current_user: dict = Depends(get_current_user),
     db: AsyncSession = Depends(get_db)
 ):
     """Assign a company to an outreach sequence"""
@@ -73,6 +77,7 @@ async def send_outreach(
     channel: str,
     message_template: str,
     subject: str = None,
+    current_user: dict = Depends(get_current_user),
     db: AsyncSession = Depends(get_db)
 ):
     """Send immediate outreach (bypass sequence)"""
@@ -90,6 +95,7 @@ async def send_outreach(
 @router.get("/history/{company_id}", response_model=list[OutreachHistoryResponse])
 async def get_outreach_history(
     company_id: UUID,
+    current_user: dict = Depends(get_current_user),
     db: AsyncSession = Depends(get_db)
 ):
     """Get outreach history for a company"""
@@ -103,6 +109,7 @@ async def get_outreach_history(
 @router.put("/assignments/{assignment_id}/pause")
 async def pause_assignment(
     assignment_id: UUID,
+    current_user: dict = Depends(get_current_user),
     db: AsyncSession = Depends(get_db)
 ):
     """Pause an outreach assignment"""
@@ -124,6 +131,7 @@ async def pause_assignment(
 @router.put("/assignments/{assignment_id}/resume")
 async def resume_assignment(
     assignment_id: UUID,
+    current_user: dict = Depends(get_current_user),
     db: AsyncSession = Depends(get_db)
 ):
     """Resume an outreach assignment"""

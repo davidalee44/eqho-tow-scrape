@@ -7,6 +7,7 @@ from app.schemas.enrichment import EnrichmentSnapshotResponse
 from app.services.enrichment_service import EnrichmentService
 from app.services.crawl_service import CrawlService
 from app.models.enrichment import EnrichmentSnapshot
+from app.auth.dependencies import get_current_user
 from sqlalchemy import select
 
 router = APIRouter()
@@ -15,6 +16,7 @@ router = APIRouter()
 @router.post("/company/{company_id}")
 async def enrich_company(
     company_id: UUID,
+    current_user: dict = Depends(get_current_user),
     db: AsyncSession = Depends(get_db)
 ):
     """Trigger enrichment for a company"""
@@ -33,6 +35,7 @@ async def enrich_company(
 @router.post("/bulk")
 async def bulk_enrichment(
     zone_id: UUID,
+    current_user: dict = Depends(get_current_user),
     db: AsyncSession = Depends(get_db)
 ):
     """Bulk enrichment for companies in a zone"""
@@ -51,6 +54,7 @@ async def bulk_enrichment(
 @router.get("/snapshots/{company_id}", response_model=list[EnrichmentSnapshotResponse])
 async def get_enrichment_snapshots(
     company_id: UUID,
+    current_user: dict = Depends(get_current_user),
     db: AsyncSession = Depends(get_db)
 ):
     """Get enrichment history for a company"""
@@ -64,6 +68,7 @@ async def get_enrichment_snapshots(
 @router.post("/scrape-website/{company_id}")
 async def scrape_website(
     company_id: UUID,
+    current_user: dict = Depends(get_current_user),
     db: AsyncSession = Depends(get_db)
 ):
     """Trigger website scraping for a company"""
@@ -82,6 +87,7 @@ async def scrape_website(
 @router.post("/scrape-websites/zone/{zone_id}")
 async def scrape_websites_for_zone(
     zone_id: UUID,
+    current_user: dict = Depends(get_current_user),
     db: AsyncSession = Depends(get_db)
 ):
     """Batch website scraping for all companies in a zone"""
