@@ -254,6 +254,20 @@ run-impound-crawls: venv-check ## Run impound-focused crawls for Baltimore MD, J
 		python scripts/run_impound_crawls.py $(if $(MAX_RESULTS),--max-results $(MAX_RESULTS)); \
 	fi
 
+check-apify-runs: venv-check ## Check status of recent Apify runs (use LIMIT=N for number of runs)
+	@if [ -d ".venv" ]; then \
+		. .venv/bin/activate && python scripts/check_apify_runs.py $(if $(LIMIT),--limit $(LIMIT)); \
+	else \
+		python scripts/check_apify_runs.py $(if $(LIMIT),--limit $(LIMIT)); \
+	fi
+
+retry-failed-crawls: venv-check ## Retry failed crawls using alternative Apify actor (use MAX_RESULTS=N to override)
+	@if [ -d ".venv" ]; then \
+		. .venv/bin/activate && python scripts/retry_failed_crawls.py $(if $(MAX_RESULTS),--max-results $(MAX_RESULTS)); \
+	else \
+		python scripts/retry_failed_crawls.py $(if $(MAX_RESULTS),--max-results $(MAX_RESULTS)); \
+	fi
+
 # Docker commands
 docker-build: ## Build Docker image
 	docker build -t towpilot-scraper .
