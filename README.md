@@ -1,5 +1,7 @@
 # TowPilot Lead Scraper Backend
 
+> **Future Architecture**: We're planning to migrate to Supabase Edge Functions for automatic data processing. See [EDGE_FUNCTIONS_ARCHITECTURE.md](./docs/EDGE_FUNCTIONS_ARCHITECTURE.md) for details.
+
 FastAPI backend for scraping and enriching towing company leads from Google Maps, with website scraping, lead enrichment, and multi-channel outreach automation.
 
 ## Features
