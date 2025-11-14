@@ -218,6 +218,24 @@ analyze-data: venv-check ## Analyze imported company data (use STATE=XX HAS_IMPO
 			$(if $(HAS_IMPOUND),--has-impound); \
 	fi
 
+import-from-json: venv-check ## Import companies from all_towing_leads.json (use JSON_FILE=path/to/file.json)
+	@if [ -d ".venv" ]; then \
+		. .venv/bin/activate && python scripts/import_from_json.py \
+			$(if $(JSON_FILE),--json-file $(JSON_FILE)); \
+	else \
+		python scripts/import_from_json.py \
+			$(if $(JSON_FILE),--json-file $(JSON_FILE)); \
+	fi
+
+monitor-import: venv-check ## Monitor import progress in real-time (use INTERVAL=N for update interval)
+	@if [ -d ".venv" ]; then \
+		. .venv/bin/activate && python scripts/monitor_import.py \
+			$(if $(INTERVAL),--interval $(INTERVAL)); \
+	else \
+		python scripts/monitor_import.py \
+			$(if $(INTERVAL),--interval $(INTERVAL)); \
+	fi
+
 import-contact-enrichment: venv-check ## Import contact enrichment data (use RUN_ID=apify_run_id DRY_RUN=true for preview)
 	@if [ -z "$(RUN_ID)" ]; then \
 		echo "ERROR: RUN_ID not set. Usage: make import-contact-enrichment RUN_ID=your_run_id"; \
