@@ -1,0 +1,250 @@
+# TowPilot Lead Scraper Backend - Cursor Rules
+
+## Project Overview
+This is a FastAPI backend for scraping and enriching towing company leads from Google Maps, with website scraping, lead enrichment, and multi-channel outreach automation.
+
+## Tech Stack
+- **Framework**: FastAPI (async)
+- **Database**: Supabase (PostgreSQL) with SQLAlchemy async ORM
+- **Migrations**: Alembic
+- **Web Scraping**: Playwright
+- **Background Jobs**: APScheduler
+- **Terminal UI**: Textual
+- **Testing**: pytest with pytest-asyncio
+
+## Code Style & Standards
+
+### Python Style
+- Follow PEP 8 conventions
+- Use type hints for all function parameters and return types
+- Use async/await for all database operations and I/O-bound tasks
+- Maximum line length: 100 characters
+- Use f-strings for string formatting
+- Prefer composition over inheritance
+
+### Import Organization
+```python
+# Standard library imports
+from datetime import datetime
+from typing import Optional, List, Dict
+
+# Third-party imports
+from fastapi import APIRouter, Depends
+from sqlalchemy.ext.asyncio import AsyncSession
+
+# Local imports
+from app.models.company import Company
+from app.services.company_service import CompanyService
+```
+
+### Naming Conventions
+- **Classes**: PascalCase (e.g., `CompanyService`)
+- **Functions/Methods**: snake_case (e.g., `get_company`)
+- **Constants**: UPPER_SNAKE_CASE (e.g., `MAX_RETRIES`)
+- **Private methods**: Prefix with underscore (e.g., `_internal_method`)
+- **Database models**: Singular noun (e.g., `Company`, not `Companies`)
+- **API endpoints**: Plural nouns (e.g., `/api/v1/companies`)
+
+### Async Patterns
+- Always use `async def` for route handlers and service methods that perform I/O
+- Use `await` for all async operations
+- Use `AsyncSession` from SQLAlchemy, never sync sessions
+- Use `asyncio.create_task()` for fire-and-forget background tasks
+
+### Error Handling
+- Use specific exception types, not bare `except:`
+- Return appropriate HTTP status codes (404 for not found, 400 for bad request, etc.)
+- Log errors with context using structured logging
+- Don't expose internal error details to API clients in production
+
+### Database Patterns
+- Always use dependency injection for database sessions (`Depends(get_db)`)
+- Use transactions appropriately (commit after operations, rollback on errors)
+- Use `select()` queries, avoid raw SQL unless necessary
+- Use `scalar_one_or_none()` for single results, `scalars().all()` for lists
+- Always refresh objects after commit: `await db.refresh(obj)`
+
+### API Design
+- Use RESTful conventions
+- Version APIs (`/api/v1/...`)
+- Use Pydantic schemas for request/response validation
+- Return consistent response formats
+- Use appropriate HTTP methods (GET for read, POST for create, PUT for update, DELETE for delete)
+- Include pagination for list endpoints (limit/offset)
+
+### Service Layer Patterns
+- Services contain business logic, not database queries
+- Services return domain objects (models), not raw data
+- Services handle errors and raise appropriate exceptions
+- Services are async and accept `AsyncSession` as parameter
+- One service per domain (ZoneService, CompanyService, etc.)
+
+### Testing Requirements
+- **TDD Approach**: Write tests before implementing features
+- **Test Coverage**: Aim for 80%+ coverage on services and API endpoints
+- **Test Organization**: Mirror app structure in `tests/` directory
+- **Test Naming**: `test_<functionality>_<scenario>` (e.g., `test_create_zone_success`)
+- **Fixtures**: Use pytest fixtures for common setup (database, test data)
+- **Mocking**: Mock external services (Apify, webhooks) in tests
+- **Async Tests**: Use `pytest.mark.asyncio` for async test functions
+- **Isolation**: Each test should be independent and clean up after itself
+
+### File Structure
+```
+app/
+├── models/          # SQLAlchemy models (database schema)
+├── schemas/         # Pydantic schemas (API validation)
+├── services/        # Business logic layer
+├── api/             # FastAPI route handlers
+├── jobs/            # Background job definitions
+├── utils/           # Utility functions
+└── dashboard/       # Terminal dashboard UI
+
+tests/
+├── conftest.py      # Shared pytest fixtures
+├── test_models/     # Model tests
+├── test_services/   # Service tests
+├── test_api/        # API endpoint tests
+└── test_utils/      # Utility tests
+```
+
+## Specific Rules
+
+### Database Models
+- All models inherit from `Base` (from `app.database`)
+- Use UUID primary keys: `Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)`
+- Include `created_at` and `updated_at` timestamps
+- Use relationships for foreign keys, not raw IDs
+- Use JSONB for flexible data structures (hours, services, etc.)
+
+### API Endpoints
+- Use dependency injection for database sessions
+- Validate input with Pydantic schemas
+- Return appropriate HTTP status codes
+- Handle errors gracefully with HTTPException
+- Use router tags for OpenAPI documentation
+
+### Services
+- Services are stateless classes with static methods or instance methods
+- Services accept `AsyncSession` as first parameter (after `self` if instance method)
+- Services raise `ValueError` for business logic errors
+- Services return domain objects or dictionaries
+- Services handle their own error logging
+
+### Background Jobs
+- Use APScheduler for scheduled tasks
+- Jobs should be idempotent (safe to run multiple times)
+- Jobs should handle errors gracefully and log failures
+- Jobs should process in batches to avoid memory issues
+
+### Web Scraping
+- Use Playwright for website scraping (handles JavaScript)
+- Always set timeouts and handle failures gracefully
+- Store scrape status and timestamps
+- Use concurrent scraping with limits (configurable)
+
+### Configuration
+- All configuration via environment variables
+- Use `pydantic-settings` for configuration management
+- Never hardcode secrets or API keys
+- Provide sensible defaults where appropriate
+
+## Testing Guidelines
+
+### Test Structure
+```python
+import pytest
+from app.services.zone_service import ZoneService
+from app.models.zone import Zone
+
+@pytest.mark.asyncio
+async def test_create_zone_success(db_session):
+    """Test successful zone creation"""
+    zone_data = ZoneCreate(name="Test Zone", zone_type="city")
+    zone = await ZoneService.create_zone(db_session, zone_data)
+    assert zone.name == "Test Zone"
+    assert zone.id is not None
+```
+
+### Test Fixtures
+- `db_session`: Async database session (transactional, rolls back after test)
+- `test_zone`: Pre-created zone for testing
+- `test_company`: Pre-created company for testing
+- Mock external services (Apify, webhooks)
+
+### Test Coverage Goals
+- **Services**: 90%+ coverage (core business logic)
+- **API Endpoints**: 80%+ coverage (happy paths + error cases)
+- **Models**: 70%+ coverage (relationships, validations)
+- **Utils**: 90%+ coverage (pure functions)
+
+## Common Patterns
+
+### Creating a New Feature
+1. Write tests first (TDD)
+2. Create/update models if needed
+3. Create Pydantic schemas for API
+4. Implement service layer
+5. Create API endpoints
+6. Add background jobs if needed
+7. Update documentation
+
+### Adding a New API Endpoint
+1. Define Pydantic schemas (request/response)
+2. Add service method
+3. Create route handler
+4. Write tests
+5. Update API documentation
+
+### Database Migrations
+- Always use Alembic for schema changes
+- Create migrations: `alembic revision --autogenerate -m "description"`
+- Review generated migration before applying
+- Test migrations on dev database first
+
+## Anti-Patterns to Avoid
+
+❌ **Don't** use sync database sessions in async code
+❌ **Don't** commit transactions in service methods (let route handlers handle it)
+❌ **Don't** expose internal exceptions to API clients
+❌ **Don't** hardcode configuration values
+❌ **Don't** skip error handling
+❌ **Don't** write tests that depend on external services
+❌ **Don't** use `print()` for logging (use proper logging)
+❌ **Don't** ignore type hints
+❌ **Don't** mix business logic in route handlers (use services)
+
+## When Making Changes
+
+1. **Run tests first**: `make test` or `pytest`
+2. **Check linting**: `make lint` or `ruff check`
+3. **Format code**: `make format` or `black app/`
+4. **Update tests**: Add/update tests for new features
+5. **Update documentation**: Update README if needed
+6. **Check migrations**: Create migrations for schema changes
+
+## Documentation
+
+- Use docstrings for all public functions/classes
+- Follow Google-style docstrings
+- Include type information in docstrings
+- Document complex business logic
+- Keep README.md updated
+
+## Performance Considerations
+
+- Use database indexes for frequently queried fields
+- Batch operations when possible
+- Use async I/O for external API calls
+- Limit concurrent operations (configurable)
+- Cache expensive operations when appropriate
+
+## Security
+
+- Never commit secrets or API keys
+- Use environment variables for all secrets
+- Validate and sanitize all user input
+- Use parameterized queries (SQLAlchemy handles this)
+- Rate limit API endpoints if needed
+- Use HTTPS in production
+
