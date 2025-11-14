@@ -105,9 +105,9 @@ migrate-create: venv-check ## Create a new migration (use MESSAGE="description")
 
 dashboard: venv-check ## Run the terminal dashboard
 	@if [ -d ".venv" ]; then \
-		. .venv/bin/activate && python -m app.dashboard.dashboard; \
+		. .venv/bin/activate && python -m app.dashboard; \
 	else \
-		python -m app.dashboard.dashboard; \
+		python -m app.dashboard; \
 	fi
 
 setup-db: venv-check ## Set up database (create tables)

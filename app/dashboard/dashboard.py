@@ -114,14 +114,17 @@ class DashboardApp(App):
     
     async def on_mount(self) -> None:
         """Called when app starts"""
-        # Initialize tab content
-        await self.initialize_tabs()
-        
-        # Initial data load
-        await self.refresh_data()
-        
-        # Auto-refresh every 5 seconds for real-time updates
-        self.set_interval(5.0, self.refresh_data)
+        try:
+            # Initialize tab content
+            await self.initialize_tabs()
+            
+            # Initial data load
+            await self.refresh_data()
+            
+            # Auto-refresh every 5 seconds for real-time updates
+            self.set_interval(5.0, self.refresh_data)
+        except Exception as e:
+            self.exit(message=f"Error initializing dashboard: {e}")
     
     async def initialize_tabs(self):
         """Initialize tab content widgets"""
@@ -140,59 +143,91 @@ class DashboardApp(App):
     
     async def refresh_data(self) -> None:
         """Refresh dashboard data"""
-        async with AsyncSessionLocal() as db:
-            service = DashboardService()
-            
-            # Get all stats in parallel
-            stats_task = service.get_dashboard_stats(db, self.current_period)
-            zone_stats_task = service.get_zone_stats(db, self.current_period)
-            apify_stats_task = service.get_apify_runs_stats(db, limit=20)
-            import_stats_task = service.get_import_progress_stats(db)
-            
-            stats, zone_stats, apify_stats, import_stats = await asyncio.gather(
-                stats_task, zone_stats_task, apify_stats_task, import_stats_task
-            )
-            
-            # Update stats cards
-            stats_cards = self.query_one("#stats-cards", StatsCards)
-            stats_cards.update_stats({
-                'companies': stats['companies'],
-                'zones': zone_stats,
-                'apify': apify_stats,
-                'import': import_stats,
-            })
-            
-            # Update overview tab
-            companies_widget = self.query_one("#companies-table", DataTable)
-            companies_widget.clear()
-            companies_widget.add_row("Total Companies", f"{stats['companies']['total']:,}")
-            companies_widget.add_row("New Companies", f"{stats['companies']['new']:,}")
-            companies_widget.add_row("Websites Scraped", f"{stats['enrichment']['websites_scraped']:,}")
-            companies_widget.add_row("Outreach Sent", f"{stats['outreach']['sent']:,}")
-            companies_widget.add_row("Outreach Replied", f"{stats['outreach']['replied']:,}")
-            companies_widget.add_row("Reply Rate", f"{stats['outreach']['reply_rate']:.1f}%")
-            
-            zones_widget = self.query_one("#zones-table", DataTable)
-            zones_widget.clear()
-            for zone in zone_stats['zones']:
-                zones_widget.add_row(
-                    zone['name'],
-                    zone['state'] or '',
-                    f"{zone['company_count']:,}"
+        try:
+            async with AsyncSessionLocal() as db:
+                service = DashboardService()
+                
+                # Get all stats in parallel
+                stats_task = service.get_dashboard_stats(db, self.current_period)
+                zone_stats_task = service.get_zone_stats(db, self.current_period)
+                apify_stats_task = service.get_apify_runs_stats(db, limit=20)
+                import_stats_task = service.get_import_progress_stats(db)
+                
+                stats, zone_stats, apify_stats, import_stats = await asyncio.gather(
+                    stats_task, zone_stats_task, apify_stats_task, import_stats_task,
+                    return_exceptions=True
                 )
-            
-            # Update Apify Runs tab
-            apify_monitor = self.query_one(ApifyRunsMonitor)
-            if apify_monitor:
-                apify_monitor.update_runs(apify_stats['recent_runs'])
-            
-            # Update Import Progress tab
-            import_widget = self.query_one(ImportProgressWidget)
-            if import_widget:
-                import_widget.update_progress(import_stats)
-            
-            # Update detailed tables (simplified for now)
-            # TODO: Add pagination and filtering for large datasets
+                
+                # Check for errors
+                if isinstance(stats, Exception):
+                    self.notify(f"Error loading stats: {stats}", severity="error")
+                    return
+                if isinstance(zone_stats, Exception):
+                    self.notify(f"Error loading zone stats: {zone_stats}", severity="error")
+                    return
+                if isinstance(apify_stats, Exception):
+                    self.notify(f"Error loading Apify stats: {apify_stats}", severity="error")
+                    return
+                if isinstance(import_stats, Exception):
+                    self.notify(f"Error loading import stats: {import_stats}", severity="error")
+                    return
+                
+                # Update stats cards
+                try:
+                    stats_cards = self.query_one("#stats-cards", StatsCards)
+                    stats_cards.update_stats({
+                        'companies': stats['companies'],
+                        'zones': zone_stats,
+                        'apify': apify_stats,
+                        'import': import_stats,
+                    })
+                except Exception as e:
+                    # Widget might not be mounted yet
+                    pass
+                
+                # Update overview tab
+                try:
+                    companies_widget = self.query_one("#companies-table", DataTable)
+                    companies_widget.clear()
+                    companies_widget.add_row("Total Companies", f"{stats['companies']['total']:,}")
+                    companies_widget.add_row("New Companies", f"{stats['companies']['new']:,}")
+                    companies_widget.add_row("Websites Scraped", f"{stats['enrichment']['websites_scraped']:,}")
+                    companies_widget.add_row("Outreach Sent", f"{stats['outreach']['sent']:,}")
+                    companies_widget.add_row("Outreach Replied", f"{stats['outreach']['replied']:,}")
+                    companies_widget.add_row("Reply Rate", f"{stats['outreach']['reply_rate']:.1f}%")
+                    
+                    zones_widget = self.query_one("#zones-table", DataTable)
+                    zones_widget.clear()
+                    for zone in zone_stats['zones']:
+                        zones_widget.add_row(
+                            zone['name'],
+                            zone['state'] or '',
+                            f"{zone['company_count']:,}"
+                        )
+                except Exception as e:
+                    # Tables might not be initialized yet
+                    pass
+                
+                # Update Apify Runs tab
+                try:
+                    apify_monitor = self.query_one(ApifyRunsMonitor)
+                    if apify_monitor:
+                        apify_monitor.update_runs(apify_stats['recent_runs'])
+                except Exception:
+                    pass
+                
+                # Update Import Progress tab
+                try:
+                    import_widget = self.query_one(ImportProgressWidget)
+                    if import_widget:
+                        import_widget.update_progress(import_stats)
+                except Exception:
+                    pass
+                
+                # Update detailed tables (simplified for now)
+                # TODO: Add pagination and filtering for large datasets
+        except Exception as e:
+            self.notify(f"Error refreshing data: {e}", severity="error")
     
     def action_set_period_today(self) -> None:
         """Set period to today"""
@@ -250,6 +285,14 @@ class DashboardApp(App):
 
 def run_dashboard():
     """Run the dashboard"""
-    app = DashboardApp()
-    app.run()
+    try:
+        app = DashboardApp()
+        app.run()
+    except KeyboardInterrupt:
+        print("\nDashboard closed by user")
+    except Exception as e:
+        print(f"\nError running dashboard: {e}")
+        import traceback
+        traceback.print_exc()
+        raise
 
