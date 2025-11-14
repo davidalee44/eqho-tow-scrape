@@ -1,5 +1,5 @@
 {
-  "total_runs": 4,
+  "total_runs": 7,
   "runs": [
     {
       "run_id": "mUdp9qreYd2kgGpQx",
@@ -41,6 +41,39 @@
       "finished_at": "2025-10-16T06:39:54.215Z",
       "actor_id": "ik8Yexwp1fkjajsUN",
       "actor_name": "enrich-google-maps-dataset-with-contacts",
+      "search_query": "Unknown",
+      "max_results": 0,
+      "stats": {}
+    },
+    {
+      "run_id": "PlyTQMRrmqpETGj3c",
+      "status": "SUCCEEDED",
+      "started_at": "2025-11-14T06:50:06.602Z",
+      "finished_at": "2025-11-14T06:50:16.587Z",
+      "actor_id": "nwua9Gu5YrADL7ZDj",
+      "actor_name": "crawler-google-places",
+      "search_query": "Unknown",
+      "max_results": 0,
+      "stats": {}
+    },
+    {
+      "run_id": "EEv5kGC2XDKtwkOy8",
+      "status": "SUCCEEDED",
+      "started_at": "2025-11-14T06:50:10.390Z",
+      "finished_at": "2025-11-14T06:50:27.047Z",
+      "actor_id": "nwua9Gu5YrADL7ZDj",
+      "actor_name": "crawler-google-places",
+      "search_query": "Unknown",
+      "max_results": 0,
+      "stats": {}
+    },
+    {
+      "run_id": "Zo4zTlRZTZuGe5QaB",
+      "status": "SUCCEEDED",
+      "started_at": "2025-11-14T06:50:10.783Z",
+      "finished_at": "2025-11-14T06:51:45.907Z",
+      "actor_id": "nwua9Gu5YrADL7ZDj",
+      "actor_name": "crawler-google-places",
       "search_query": "Unknown",
       "max_results": 0,
       "stats": {}

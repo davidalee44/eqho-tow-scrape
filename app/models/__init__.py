@@ -5,6 +5,7 @@ from app.models.enrichment import EnrichmentSnapshot
 from app.models.outreach import OutreachHistory, OutreachSequence, OutreachAssignment
 from app.models.user import User
 from app.models.environment_config import EnvironmentConfig
+from app.models.apify_run import ApifyRun
 
 __all__ = [
     "Zone",
@@ -15,5 +16,6 @@ __all__ = [
     "OutreachAssignment",
     "User",
     "EnvironmentConfig",
+    "ApifyRun",
 ]
 

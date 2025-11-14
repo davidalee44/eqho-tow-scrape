@@ -9,7 +9,7 @@ from app.database import Base
 from app.config import settings
 
 # Import all models so Alembic can detect them
-from app.models import Zone, Company, EnrichmentSnapshot, OutreachHistory, OutreachSequence, OutreachAssignment, User, EnvironmentConfig
+from app.models import Zone, Company, EnrichmentSnapshot, OutreachHistory, OutreachSequence, OutreachAssignment, User, EnvironmentConfig, ApifyRun
 
 # this is the Alembic Config object
 config = context.config

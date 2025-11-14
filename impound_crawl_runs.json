@@ -1,7 +1,7 @@
 {
-  "started_at": "2025-11-13T23:53:39.970456",
-  "total_runs": 1,
-  "total_targeted": 3000,
+  "started_at": "2025-11-14T01:08:38.585985",
+  "total_runs": 8,
+  "total_targeted": 24000,
   "target_locations": [
     "Baltimore, MD",
     "Jacksonville, NC",
@@ -9,13 +9,76 @@
   ],
   "runs": [
     {
-      "run_id": "uJCnW6EBYi9i2Ersh",
+      "run_id": "McCMwwSzBWcNEkKLp",
       "location": "Baltimore, MD",
       "query": "impound lot",
       "max_results": 3000,
       "status": "RUNNING",
-      "started_at": "2025-11-13T23:53:29.910255",
-      "console_url": "https://console.apify.com/view/runs/uJCnW6EBYi9i2Ersh"
+      "started_at": "2025-11-14T01:08:32.540783",
+      "console_url": "https://console.apify.com/view/runs/McCMwwSzBWcNEkKLp"
+    },
+    {
+      "run_id": "RW9XwuSA9KzOZYdqe",
+      "location": "Baltimore, MD",
+      "query": "towing impound",
+      "max_results": 3000,
+      "status": "RUNNING",
+      "started_at": "2025-11-14T01:08:32.877238",
+      "console_url": "https://console.apify.com/view/runs/RW9XwuSA9KzOZYdqe"
+    },
+    {
+      "run_id": "PZjjDydnohlYIMGzB",
+      "location": "Baltimore, MD",
+      "query": "vehicle impound",
+      "max_results": 3000,
+      "status": "RUNNING",
+      "started_at": "2025-11-14T01:08:33.234031",
+      "console_url": "https://console.apify.com/view/runs/PZjjDydnohlYIMGzB"
+    },
+    {
+      "run_id": "xidbhEpMqPmTHXonI",
+      "location": "Baltimore, MD",
+      "query": "car impound",
+      "max_results": 3000,
+      "status": "RUNNING",
+      "started_at": "2025-11-14T01:08:33.794642",
+      "console_url": "https://console.apify.com/view/runs/xidbhEpMqPmTHXonI"
+    },
+    {
+      "run_id": "VUqnYgg7Rmde1FuCQ",
+      "location": "Baltimore, MD",
+      "query": "impound service",
+      "max_results": 3000,
+      "status": "RUNNING",
+      "started_at": "2025-11-14T01:08:34.204843",
+      "console_url": "https://console.apify.com/view/runs/VUqnYgg7Rmde1FuCQ"
+    },
+    {
+      "run_id": "vPCosyi9wyZmwxsnM",
+      "location": "Baltimore, MD",
+      "query": "towing company impound",
+      "max_results": 3000,
+      "status": "RUNNING",
+      "started_at": "2025-11-14T01:08:34.517885",
+      "console_url": "https://console.apify.com/view/runs/vPCosyi9wyZmwxsnM"
+    },
+    {
+      "run_id": "mTdgh6tgwWC8HV0Oz",
+      "location": "Baltimore, MD",
+      "query": "auto impound",
+      "max_results": 3000,
+      "status": "RUNNING",
+      "started_at": "2025-11-14T01:08:34.869715",
+      "console_url": "https://console.apify.com/view/runs/mTdgh6tgwWC8HV0Oz"
+    },
+    {
+      "run_id": "sa99v9kLZebuCziuM",
+      "location": "Jacksonville, NC",
+      "query": "impound lot",
+      "max_results": 3000,
+      "status": "RUNNING",
+      "started_at": "2025-11-14T01:08:35.157348",
+      "console_url": "https://console.apify.com/view/runs/sa99v9kLZebuCziuM"
     }
   ]
 }

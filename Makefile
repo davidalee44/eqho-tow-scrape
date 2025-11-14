@@ -268,6 +268,29 @@ retry-failed-crawls: venv-check ## Retry failed crawls using alternative Apify a
 		python scripts/retry_failed_crawls.py $(if $(MAX_RESULTS),--max-results $(MAX_RESULTS)); \
 	fi
 
+deploy-edge-functions: ## Deploy Supabase Edge Functions
+	@bash scripts/deploy-edge-functions.sh
+
+setup-apify-webhook: ## Show instructions for setting up Apify webhook
+	@echo "=========================================="
+	@echo "Apify Webhook Setup Instructions"
+	@echo "=========================================="
+	@echo ""
+	@echo "1. Get your webhook URL:"
+	@echo "   https://[your-project].supabase.co/functions/v1/apify-webhook-handler"
+	@echo ""
+	@echo "2. In Apify Console, go to:"
+	@echo "   Settings → Webhooks → Add Webhook"
+	@echo ""
+	@echo "3. Configure:"
+	@echo "   Event: ACTOR.RUN.SUCCEEDED"
+	@echo "   URL: [your webhook URL from step 1]"
+	@echo "   Method: POST"
+	@echo ""
+	@echo "4. Test with a small crawl"
+	@echo ""
+	@echo "See docs/EDGE_FUNCTIONS_SETUP.md for detailed instructions"
+
 # Docker commands
 docker-build: ## Build Docker image
 	docker build -t towpilot-scraper .
